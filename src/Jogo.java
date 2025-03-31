@@ -69,21 +69,21 @@ class Jogo {
             Jogador vencedorRodada = jogarRodada();
 
             if (vencedorRodada != null) {
-                int indexVencedor = jogadores.indexOf(vencedorRodada);
-                pontos[indexVencedor]++;
-                System.out.println("Vencedor da rodada: " + vencedorRodada.getNome());
+                int indexVencedor = vencedorRodada.getTeam();
+                pontos[indexVencedor - 1] += (trucado ? 3 : 1);
+                System.out.println("Vencedor da rodada: Time " + indexVencedor);
             } else {
                 System.out.println("Rodada empatada! Nenhum ponto foi atribuído.");
             }
 
-            System.out.println("Placar: " + jogadores.get(0).getNome() + " " + pontos[0] + " - " + pontos[1] + " " + jogadores.get(1).getNome());
+            System.out.println("Placar: Time " + jogadores.get(0).getTeam() + " " + pontos[0] + " - " + pontos[1] + " Time " + jogadores.get(1).getTeam());
 
             trucado = false;
             rodada++;
         }
 
         System.out.println("\n===== Jogo Encerrado! =====");
-        System.out.println("Vencedor: " + (pontos[0] > pontos[1] ? jogadores.get(0).getNome() : jogadores.get(1).getNome()));
+        System.out.println("Vencedor: " + (pontos[0] > pontos[1] ? jogadores.get(0).getTeam() : jogadores.get(1).getTeam()));
     }
 
     private void distribuirCartas() {
@@ -151,11 +151,11 @@ class Jogo {
             vencedorTurno = determinarVencedor(jogadas);
 
             if (vencedorTurno != null) {
-                int indexVencedor = jogadores.indexOf(vencedorTurno);
-                vitoriasTurno[indexVencedor]++;
-                System.out.println("Vencedor do turno: " + vencedorTurno.getNome());
+                int indexVencedor = vencedorTurno.getTeam();
+                vitoriasTurno[indexVencedor - 1]++;
+                System.out.println("Vencedor do turno: Time " + vencedorTurno.getTeam());
 
-                if (vitoriasTurno[indexVencedor] == 2) {
+                if (vitoriasTurno[indexVencedor - 1] == 2) {
                     return vencedorTurno;
                 }
             } else {
