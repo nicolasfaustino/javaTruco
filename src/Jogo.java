@@ -8,12 +8,14 @@ class Jogo {
     private final Scanner scanner;
     private final int[] pontos;
     private String manilha;
+    private boolean trucado;
 
     public Jogo(List<Jogador> jogadores) {
         this.jogadores = jogadores;
         this.baralho = new Baralho();
         this.scanner = new Scanner(System.in);
         this.pontos = new int[jogadores.size()];
+        this.trucado = false;
         inicializarRankingValores();
     }
 
@@ -76,6 +78,7 @@ class Jogo {
 
             System.out.println("Placar: " + jogadores.get(0).getNome() + " " + pontos[0] + " - " + pontos[1] + " " + jogadores.get(1).getNome());
 
+            trucado = false;
             rodada++;
         }
 
@@ -92,8 +95,29 @@ class Jogo {
         }
     }
 
+    private boolean Trucar() {
+        System.out.println("Deseja aceitar o truco ? (S/N)");
+        char escolha = scanner.next().charAt(0);
+
+        while (escolha != 'S' || escolha != 'N') {
+            if (escolha == 'S') {
+                return true;
+            } else if (escolha == 'N') {
+                return false;
+            } else {
+                System.out.println("Valor Invalido! Digite 'S' ou 'N'.");
+                escolha = scanner.next().charAt(0);
+            }
+        }
+
+        return false;
+    }
+
     private Jogador jogarRodada() {
         int[] vitoriasTurno = new int[jogadores.size()];
+        boolean escolhaTruco = false;
+        Jogador vencedorTurno = null;
+        Jogador vencedorRodada = null;
 
         for (int turno = 1; turno <= 3; turno++) {
             System.out.println("\n--- Turno " + turno + " ---");
@@ -103,11 +127,28 @@ class Jogo {
 
             for (Jogador jogador : jogadores) {
                 Carta cartaJogada = escolherCarta(jogador);
-                System.out.println(jogador.getNome() + " jogou " + cartaJogada);
-                jogadas.put(jogador, cartaJogada);
+                if (cartaJogada == null) {
+                    System.out.println(jogador.getNome() + " Pediu truco");
+                    escolhaTruco = Trucar();
+                    if (escolhaTruco) {
+                        System.out.println("Ele aceitou seu truco");
+                        trucado = true;
+                        cartaJogada = escolherCarta(jogador);
+                    } else {
+                        vencedorRodada = jogador;
+                        break;
+                    }
+                } else {
+                    System.out.println(jogador.getNome() + " jogou " + cartaJogada);
+                    jogadas.put(jogador, cartaJogada);
+                }
             }
 
-            Jogador vencedorTurno = determinarVencedor(jogadas);
+            if (!escolhaTruco) {
+                break;
+            }
+
+            vencedorTurno = determinarVencedor(jogadas);
 
             if (vencedorTurno != null) {
                 int indexVencedor = jogadores.indexOf(vencedorTurno);
@@ -122,7 +163,9 @@ class Jogo {
             }
         }
 
-        if (vitoriasTurno[0] > vitoriasTurno[1]) {
+        if (vencedorRodada != null) {
+            return vencedorRodada;
+        }else if (vitoriasTurno[0] > vitoriasTurno[1]) {
             return jogadores.getFirst();
         } else if (vitoriasTurno[1] > vitoriasTurno[0]) {
             return jogadores.getLast();
@@ -139,11 +182,18 @@ class Jogo {
             System.out.println((i + 1) + " - " + mao.get(i));
         }
 
+        System.out.println((mao.size() + 1) +" - Pedir truco");
+
+
         int escolha;
         do {
             System.out.print("Digite o número da carta: ");
             escolha = scanner.nextInt();
-        } while (escolha < 1 || escolha > mao.size());
+        } while (escolha < 1 || escolha > (mao.size() + 1));
+
+        if (escolha == mao.size() + 1) {
+            return null;
+        }
 
         return mao.remove(escolha - 1);
     }
