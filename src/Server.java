@@ -4,25 +4,44 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class Server {
     private static final int PORTA = 8080;
     private static final String IP = "127.0.0.1";
     private static final List<ClientHandler> conections = Collections.synchronizedList(new ArrayList<>());
+    private static final List<Jogador> jogadores = new ArrayList<>();
     private static volatile boolean jogoIniciado = false;
+    private static boolean teamGame = false;
 
     public static void main(String[] args) throws IOException {
-        List<Jogador> jogadores = new ArrayList<>();
         try {
             ServerSocket server = new ServerSocket(PORTA);
             System.out.println("Servidor aberto com a porta " + PORTA);
-            while (jogadores.size() < 2 || !jogoIniciado) {
-                if (jogadores.size() < 2) {
+
+            Scanner scanner = new Scanner(System.in);
+            boolean continuar = false;
+            while (!continuar) {
+                System.out.println("1 - Jogo solo");
+                System.out.println("2 - Jogo com Duplas");
+                int escolha = scanner.nextInt();
+                switch (escolha) {
+                    case 1:
+                        continuar = true;
+                        teamGame = false;
+                        break;
+                    case 2:
+                        continuar = true;
+                        teamGame = true;
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            while (!jogoIniciado) {
+                if ((teamGame ? jogadores.size() < 4 : jogadores.size() < 2)) {
                     System.out.println("Jogo Iniciado " + jogoIniciado);
                     Socket socket = server.accept();
                     ClientHandler clientHandler = new ClientHandler(socket);
@@ -132,8 +151,12 @@ public class Server {
                         String input = recebeMensagem();
                         System.out.println(input);
                         if (Objects.equals(input, "iniciar")) {
-                            jogoIniciado = true;
-                            Server.broadcast("O jogo foi iniciado pelo host!");
+                            if (teamGame ? jogadores.size() < 4 : jogadores.size() < 2) {
+                                enviarMensagem("Aguarde os jogadores entrarem");
+                            } else {
+                                jogoIniciado = true;
+                                Server.broadcast("O jogo foi iniciado pelo host!");
+                            }
                         } else {
                             enviarMensagem("Para iniciar o jogo, digite 'iniciar'.");
                         }
