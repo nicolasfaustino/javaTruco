@@ -4,12 +4,15 @@ import java.util.List;
 
 class Baralho {
     private final List<Carta> cartas;
+    private final String[] naipes = {"Ouros", "Espadas", "Copas", "Paus"};
+    private final String[] valores = {"A", "2", "3", "4", "5", "6", "7", "Q", "J", "K"};
 
     public Baralho() {
-        String[] naipes = {"Ouros", "Espadas", "Copas", "Paus"};
-        String[] valores = {"A", "2", "3", "4", "5", "6", "7", "Q", "J", "K"};
-
         cartas = new ArrayList<>();
+        iniciarBaralho();
+    }
+
+    private void iniciarBaralho() {
         for (String naipe : naipes) {
             for (String valor : valores) {
                 cartas.add(new Carta(naipe, valor));
@@ -23,5 +26,10 @@ class Baralho {
 
     public Carta distribuirCarta() {
         return cartas.isEmpty() ? null : cartas.removeFirst();
+    }
+
+    public void resetarBaralho() {
+        this.cartas.clear();
+        iniciarBaralho();
     }
 }

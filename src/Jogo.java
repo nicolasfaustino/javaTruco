@@ -71,6 +71,8 @@ class Jogo {
             if (vencedorRodada != null) {
                 int indexVencedor = vencedorRodada.getTeam();
                 pontos[indexVencedor - 1] += (trucado ? 3 : 1);
+                baralho.resetarBaralho();
+                baralho.embaralhar();
                 Server.broadcast("Vencedor da rodada: Time " + indexVencedor);
             } else {
                 Server.broadcast("Rodada empatada! Nenhum ponto foi atribuído.");
