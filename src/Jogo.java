@@ -8,7 +8,7 @@ class Jogo {
     private final int[] pontos;
     private String manilha;
     private boolean trucado;
-    private Server server;
+    private final Server server;
 
     public Jogo(List<Jogador> players) {
         this.jogadores = players;
@@ -63,7 +63,7 @@ class Jogo {
         int rodada = 1;
 
         while (pontos[0] < 12 && pontos[1] < 12) {
-            server.broadcast("\n===== Rodada " + rodada + " =====");
+            Server.broadcast("\n===== Rodada " + rodada + " =====");
             distribuirCartas();
             randomManilha();
             Jogador vencedorRodada = jogarRodada();
@@ -71,19 +71,19 @@ class Jogo {
             if (vencedorRodada != null) {
                 int indexVencedor = vencedorRodada.getTeam();
                 pontos[indexVencedor - 1] += (trucado ? 3 : 1);
-                server.broadcast("Vencedor da rodada: Time " + indexVencedor);
+                Server.broadcast("Vencedor da rodada: Time " + indexVencedor);
             } else {
-                server.broadcast("Rodada empatada! Nenhum ponto foi atribuído.");
+                Server.broadcast("Rodada empatada! Nenhum ponto foi atribuído.");
             }
 
-            server.broadcast("Placar: Time " + jogadores.get(0).getTeam() + " " + pontos[0] + " - " + pontos[1] + " Time " + jogadores.get(1).getTeam());
+            Server.broadcast("Placar: Time " + jogadores.get(0).getTeam() + " " + pontos[0] + " - " + pontos[1] + " Time " + jogadores.get(1).getTeam());
 
             trucado = false;
             rodada++;
         }
 
-        server.broadcast("\n===== Jogo Encerrado! =====");
-        server.broadcast("Vencedor: " + (pontos[0] > pontos[1] ? jogadores.get(0).getTeam() : jogadores.get(1).getTeam()));
+        Server.broadcast("\n===== Jogo Encerrado! =====");
+        Server.broadcast("Vencedor: " + (pontos[0] > pontos[1] ? jogadores.get(0).getTeam() : jogadores.get(1).getTeam()));
     }
 
     private void distribuirCartas() {
@@ -98,7 +98,7 @@ class Jogo {
     private boolean Trucar(int team) {
         int index = team == 1 ? 1 : 0;
         String nome = jogadores.get(index).getNome();
-        server.enviarMensagem(nome, "Deseja aceitar o truco ? (S/N)");
+        Server.enviarMensagem(nome, "Deseja aceitar o truco ? (S/N)");
         String escolha = server.recebeMensagem(nome);
 
         while (!escolha.equals("S") || !escolha.equals("N")) {
@@ -107,7 +107,7 @@ class Jogo {
             } else if (!escolha.equals("N")) {
                 return false;
             } else {
-                server.enviarMensagem(nome, "Valor Invalido! Digite 'S' ou 'N'.");
+                Server.enviarMensagem(nome, "Valor Invalido! Digite 'S' ou 'N'.");
                 escolha = server.recebeMensagem(nome);
             }
         }
@@ -122,18 +122,18 @@ class Jogo {
         Jogador vencedorRodada = null;
 
         for (int turno = 1; turno <= 3; turno++) {
-            server.broadcast("\n--- Turno " + turno + " ---");
-            server.broadcast("Vira na Mesa: " + manilha);
+            Server.broadcast("\n--- Turno " + turno + " ---");
+            Server.broadcast("Vira na Mesa: " + manilha);
 
             Map<Jogador, Carta> jogadas = new HashMap<>();
 
             for (Jogador jogador : jogadores) {
                 Carta cartaJogada = escolherCarta(jogador);
                 if (cartaJogada == null) {
-                    server.broadcast(jogador.getNome() + " Pediu truco");
+                    Server.broadcast(jogador.getNome() + " Pediu truco");
                     escolhaTruco = Trucar(jogador.getTeam());
                     if (escolhaTruco) {
-                        server.broadcast("A outra equipe aceitou o truco");
+                        Server.broadcast("A outra equipe aceitou o truco");
                         trucado = true;
                         cartaJogada = escolherCarta(jogador);
                     } else {
@@ -141,7 +141,7 @@ class Jogo {
                         break;
                     }
                 } else {
-                    server.broadcast(jogador.getNome() + " jogou " + cartaJogada);
+                    Server.broadcast(jogador.getNome() + " jogou " + cartaJogada);
                     jogadas.put(jogador, cartaJogada);
                 }
             }
@@ -155,13 +155,13 @@ class Jogo {
             if (vencedorTurno != null) {
                 int indexVencedor = vencedorTurno.getTeam();
                 vitoriasTurno[indexVencedor - 1]++;
-                server.broadcast("Vencedor do turno: Time " + vencedorTurno.getTeam());
+                Server.broadcast("Vencedor do turno: Time " + vencedorTurno.getTeam());
 
                 if (vitoriasTurno[indexVencedor - 1] == 2) {
                     return vencedorTurno;
                 }
             } else {
-                server.broadcast("Turno empatado!");
+                Server.broadcast("Turno empatado!");
             }
         }
 
@@ -178,18 +178,18 @@ class Jogo {
 
     private Carta escolherCarta(Jogador jogador) {
         List<Carta> mao = jogador.getMao();
-        server.enviarMensagem(jogador.getNome(), "escolha uma carta para jogar:");
+        Server.enviarMensagem(jogador.getNome(), "escolha uma carta para jogar:");
 
         for (int i = 0; i < mao.size(); i++) {
-            server.enviarMensagem(jogador.getNome(),(i + 1) + " - " + mao.get(i));
+            Server.enviarMensagem(jogador.getNome(),(i + 1) + " - " + mao.get(i));
         }
 
-        server.enviarMensagem(jogador.getNome(),(mao.size() + 1) +" - Pedir truco");
+        Server.enviarMensagem(jogador.getNome(),(mao.size() + 1) +" - Pedir truco");
 
 
         int escolha;
         do {
-            server.enviarMensagem(jogador.getNome(),"Digite o número da carta: ");
+            Server.enviarMensagem(jogador.getNome(),"Digite o número da carta: ");
             escolha = Integer.parseInt(server.recebeMensagem(jogador.getNome()));
         } while (escolha < 1 || escolha > (mao.size() + 1));
 

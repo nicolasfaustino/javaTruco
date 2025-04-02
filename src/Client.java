@@ -37,7 +37,7 @@ public class Client {
 
             System.out.println("Desconectando...");
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 }
