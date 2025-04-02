@@ -9,7 +9,6 @@ import java.util.concurrent.TimeUnit;
 
 public class Server {
     private static final int PORTA = 8080;
-    private static final String IP = "127.0.0.1";
     private static final List<ClientHandler> conections = Collections.synchronizedList(new ArrayList<>());
     private static final List<Jogador> jogadores = new ArrayList<>();
     private static volatile boolean jogoIniciado = false;
@@ -103,19 +102,17 @@ public class Server {
     }
 
     static class ClientHandler implements Runnable {
-        private Socket socket;
-        private PrintWriter out;
-        private BufferedReader in;
+        private final PrintWriter out;
+        private final BufferedReader in;
         private boolean host;
         private String nome;
 
         public ClientHandler(Socket socket) {
-            this.socket = socket;
             try {
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 out = new PrintWriter(socket.getOutputStream(), true);
             } catch (IOException e) {
-                e.printStackTrace();
+                throw new RuntimeException(e);
             }
         }
 
@@ -131,9 +128,8 @@ public class Server {
             try {
                 return in.readLine();
             } catch (IOException e) {
-                e.printStackTrace();
+                throw new RuntimeException(e);
             }
-            return null;
         }
 
         @Override
@@ -162,9 +158,7 @@ public class Server {
                         }
                     }
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
+            } catch (IOException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
