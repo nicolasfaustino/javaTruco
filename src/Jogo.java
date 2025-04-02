@@ -5,17 +5,17 @@ class Jogo {
     private final Baralho baralho;
     private Map<String, Integer> rankingValores;
     private Map<String, Integer> rankingNaipes;
-    private final Scanner scanner;
     private final int[] pontos;
     private String manilha;
     private boolean trucado;
+    private Server server;
 
-    public Jogo(List<Jogador> jogadores) {
-        this.jogadores = jogadores;
+    public Jogo(List<Jogador> players) {
+        this.jogadores = players;
         this.baralho = new Baralho();
-        this.scanner = new Scanner(System.in);
-        this.pontos = new int[jogadores.size()];
+        this.pontos = new int[players.size()];
         this.trucado = false;
+        this.server = new Server();
         inicializarRankingValores();
     }
 
@@ -63,7 +63,7 @@ class Jogo {
         int rodada = 1;
 
         while (pontos[0] < 12 && pontos[1] < 12) {
-            System.out.println("\n===== Rodada " + rodada + " =====");
+            server.broadcast("\n===== Rodada " + rodada + " =====");
             distribuirCartas();
             randomManilha();
             Jogador vencedorRodada = jogarRodada();
@@ -71,19 +71,19 @@ class Jogo {
             if (vencedorRodada != null) {
                 int indexVencedor = vencedorRodada.getTeam();
                 pontos[indexVencedor - 1] += (trucado ? 3 : 1);
-                System.out.println("Vencedor da rodada: Time " + indexVencedor);
+                server.broadcast("Vencedor da rodada: Time " + indexVencedor);
             } else {
-                System.out.println("Rodada empatada! Nenhum ponto foi atribuído.");
+                server.broadcast("Rodada empatada! Nenhum ponto foi atribuído.");
             }
 
-            System.out.println("Placar: Time " + jogadores.get(0).getTeam() + " " + pontos[0] + " - " + pontos[1] + " Time " + jogadores.get(1).getTeam());
+            server.broadcast("Placar: Time " + jogadores.get(0).getTeam() + " " + pontos[0] + " - " + pontos[1] + " Time " + jogadores.get(1).getTeam());
 
             trucado = false;
             rodada++;
         }
 
-        System.out.println("\n===== Jogo Encerrado! =====");
-        System.out.println("Vencedor: " + (pontos[0] > pontos[1] ? jogadores.get(0).getTeam() : jogadores.get(1).getTeam()));
+        server.broadcast("\n===== Jogo Encerrado! =====");
+        server.broadcast("Vencedor: " + (pontos[0] > pontos[1] ? jogadores.get(0).getTeam() : jogadores.get(1).getTeam()));
     }
 
     private void distribuirCartas() {
@@ -95,18 +95,20 @@ class Jogo {
         }
     }
 
-    private boolean Trucar() {
-        System.out.println("Deseja aceitar o truco ? (S/N)");
-        char escolha = scanner.next().charAt(0);
+    private boolean Trucar(int team) {
+        int index = team == 1 ? 1 : 0;
+        String nome = jogadores.get(index).getNome();
+        server.enviarMensagem(nome, "Deseja aceitar o truco ? (S/N)");
+        String escolha = server.recebeMensagem(nome);
 
-        while (escolha != 'S' || escolha != 'N') {
-            if (escolha == 'S') {
+        while (!escolha.equals("S") || !escolha.equals("N")) {
+            if (!escolha.equals("S")) {
                 return true;
-            } else if (escolha == 'N') {
+            } else if (!escolha.equals("N")) {
                 return false;
             } else {
-                System.out.println("Valor Invalido! Digite 'S' ou 'N'.");
-                escolha = scanner.next().charAt(0);
+                server.enviarMensagem(nome, "Valor Invalido! Digite 'S' ou 'N'.");
+                escolha = server.recebeMensagem(nome);
             }
         }
 
@@ -120,18 +122,18 @@ class Jogo {
         Jogador vencedorRodada = null;
 
         for (int turno = 1; turno <= 3; turno++) {
-            System.out.println("\n--- Turno " + turno + " ---");
-            System.out.println("Vira na Mesa: " + manilha);
+            server.broadcast("\n--- Turno " + turno + " ---");
+            server.broadcast("Vira na Mesa: " + manilha);
 
             Map<Jogador, Carta> jogadas = new HashMap<>();
 
             for (Jogador jogador : jogadores) {
                 Carta cartaJogada = escolherCarta(jogador);
                 if (cartaJogada == null) {
-                    System.out.println(jogador.getNome() + " Pediu truco");
-                    escolhaTruco = Trucar();
+                    server.broadcast(jogador.getNome() + " Pediu truco");
+                    escolhaTruco = Trucar(jogador.getTeam());
                     if (escolhaTruco) {
-                        System.out.println("Ele aceitou seu truco");
+                        server.broadcast("A outra equipe aceitou o truco");
                         trucado = true;
                         cartaJogada = escolherCarta(jogador);
                     } else {
@@ -139,12 +141,12 @@ class Jogo {
                         break;
                     }
                 } else {
-                    System.out.println(jogador.getNome() + " jogou " + cartaJogada);
+                    server.broadcast(jogador.getNome() + " jogou " + cartaJogada);
                     jogadas.put(jogador, cartaJogada);
                 }
             }
 
-            if (!escolhaTruco) {
+            if (vencedorRodada != null && !escolhaTruco) {
                 break;
             }
 
@@ -153,13 +155,13 @@ class Jogo {
             if (vencedorTurno != null) {
                 int indexVencedor = vencedorTurno.getTeam();
                 vitoriasTurno[indexVencedor - 1]++;
-                System.out.println("Vencedor do turno: Time " + vencedorTurno.getTeam());
+                server.broadcast("Vencedor do turno: Time " + vencedorTurno.getTeam());
 
                 if (vitoriasTurno[indexVencedor - 1] == 2) {
                     return vencedorTurno;
                 }
             } else {
-                System.out.println("Turno empatado!");
+                server.broadcast("Turno empatado!");
             }
         }
 
@@ -176,19 +178,19 @@ class Jogo {
 
     private Carta escolherCarta(Jogador jogador) {
         List<Carta> mao = jogador.getMao();
-        System.out.println("\n" + jogador.getNome() + ", escolha uma carta para jogar:");
+        server.enviarMensagem(jogador.getNome(), "escolha uma carta para jogar:");
 
         for (int i = 0; i < mao.size(); i++) {
-            System.out.println((i + 1) + " - " + mao.get(i));
+            server.enviarMensagem(jogador.getNome(),(i + 1) + " - " + mao.get(i));
         }
 
-        System.out.println((mao.size() + 1) +" - Pedir truco");
+        server.enviarMensagem(jogador.getNome(),(mao.size() + 1) +" - Pedir truco");
 
 
         int escolha;
         do {
-            System.out.print("Digite o número da carta: ");
-            escolha = scanner.nextInt();
+            server.enviarMensagem(jogador.getNome(),"Digite o número da carta: ");
+            escolha = Integer.parseInt(server.recebeMensagem(jogador.getNome()));
         } while (escolha < 1 || escolha > (mao.size() + 1));
 
         if (escolha == mao.size() + 1) {
@@ -207,7 +209,6 @@ class Jogo {
             Carta carta = entrada.getValue();
             int valorCarta = rankingValores.get(carta.getValor());
             String naipeCarta = carta.getNaipe();
-            System.out.println(carta.getValor() + ", " + valorCarta + ", " + naipeCarta);
 
             if (valorCarta > maiorValor || (valorCarta == maiorValor && rankingNaipes.get(naipeCarta) > rankingNaipes.get(melhorNaipe))) {
                 maiorValor = valorCarta;
