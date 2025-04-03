@@ -137,7 +137,7 @@ class Jogo {
                 Carta cartaJogada = null;
 
                 boolean b = trucar.haveTrucar(team);
-                Server.enviarMensagem(nome, "1 - Escolher Carta \n " + (b ? "2 - Trucar" : ""));
+                Server.enviarMensagem(nome, "1 - Escolher Carta \n" + (b ? "2 - Trucar" : ""));
                 boolean unlocked = false;
                 int escolha = 0;
                 while (!unlocked) {
